@@ -8,3 +8,4 @@ node2.ose3.kenscloud.io
 
 [nodes:vars]
 sudo_user=basicuser
+audit_rules=/etc/audit/rules.d/audit.rules

@@ -52,3 +52,282 @@
         regexp="PASS_MAX_DAYS *[0-9]*"
         state=present
         line="PASS_MAX_DAYS     60"
+    - name: Modify the System Login Banner
+      template:
+        src=templates/issue
+        dest=/etc/issue
+        group=root
+        owner=root
+        mode=644 
+    - name: Ensure rsyslog is Installed
+      yum:
+        name=rsyslog
+    - name: Enable rsyslog Service
+      service:
+        name=rsyslog
+        state=running 
+        enabled=yes
+    - name: Record attempts to alter time through adjtimex 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S adjtimex -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b32 -S adjtimex -k audit_time_rules'
+    - name: Record attempts to alter time through adjtimex 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S adjtimex -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b64 -S adjtimex -k audit_time_rules'
+    - name: Record attempts to alter time through settimeofday 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S settimeofday -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b32 -S settimeofday -k audit_time_rules'
+    - name: Record attempts to alter time through settimeofday 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S settimeofday -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b64 -S settimeofday -k audit_time_rules'
+    - name: Record Attempts to Alter Time Through stime 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S stime -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b32 -S stime -k audit_time_rules'
+    - name: Record Attempts to Alter Time Through clock_settime 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S clock_settime -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b32 -S clock_settime -k audit_time_rules'
+    - name: Record Attempts to Alter Time Through clock_settime 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S clock_settime -k audit_time_rules'
+        create=yes
+        line='-a always,exit -F arch=b64 -S clock_settime -k audit_time_rules'
+    - name: Record Attempts to Alter the localtime File
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/localtime -p wa -k audit_time_rules'
+        create=yes
+        line='-w /etc/localtime -p wa -k audit_time_rules'
+    - name: Record Events that Modify the System's Discretionary Access Controls - chmod 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - chmod 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - chown 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - chown 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchmod 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchmod 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchmodat 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchmodat 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchown 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchown 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchown 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fchownat 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fremovexattr 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fremovexattr 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fsetxattr 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - fsetxattr 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - lchown 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - lchown 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - lremovexattr 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - lremovexattr 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - lsetxattr 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - lsetxattr 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - removexattr 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - removexattr 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - setxattr 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b32 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify the System's Discretionary Access Controls - setxattr 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+        create=yes
+        line='-a always,exit -F arch=b64 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    - name: Record Events that Modify User/Group Information - /etc/group
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/group -p wa -k audit_rules_usergroup_modification'
+        create=yes
+        line='-w /etc/group -p wa -k audit_rules_usergroup_modification'
+    - name: Record Events that Modify User/Group Information - /etc/passwd
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/passwd -p wa -k audit_rules_usergroup_modification'
+        create=yes
+        line='-w /etc/passwd -p wa -k audit_rules_usergroup_modification'
+    - name: Record Events that Modify User/Group Information - /etc/gshadow
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/gshadow -p wa -k audit_rules_usergroup_modification'
+        create=yes
+        line='-w /etc/gshadow -p wa -k audit_rules_usergroup_modification'
+    - name: Record Events that Modify User/Group Information - /etc/shadow
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/shadow -p wa -k audit_rules_usergroup_modification'
+        create=yes
+        line='-w /etc/shadow -p wa -k audit_rules_usergroup_modification'
+    - name: Record Events that Modify User/Group Information - /etc/security/opasswd
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/security/opasswd -p wa -k audit_rules_usergroup_modification'
+        create=yes
+        line='-w /etc/security/opasswd -p wa -k audit_rules_usergroup_modification'
+    - name: Record Events that Modify the System's Network Environment - sethostname/setdomainname
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S sethostname -S setdomainname -k audit_rules_networkconfig_modification'
+        create=yes
+        line='-a always,exit -F arch=b64 -S sethostname -S setdomainname -k audit_rules_networkconfig_modification'
+    - name: Record Events that Modify the System's Network Environment - /etc/issue
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/issue -p wa -k audit_rules_networkconfig_modification'
+        create=yes
+        line='-w /etc/issue -p wa -k audit_rules_networkconfig_modification'
+    - name: Record Events that Modify the System's Network Environment - /etc/issue.net
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/issue.net -p wa -k audit_rules_networkconfig_modification'
+        create=yes
+        line='-w /etc/issue.net -p wa -k audit_rules_networkconfig_modification'
+    - name: Record Events that Modify the System's Network Environment - /etc/hosts
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/hosts -p wa -k audit_rules_networkconfig_modification'
+        create=yes
+        line='-w /etc/hosts -p wa -k audit_rules_networkconfig_modification'
+    - name: Record Events that Modify the System's Network Environment - /etc/sysconfig/network
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification'
+        create=yes
+        line='-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification'
