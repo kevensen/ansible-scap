@@ -4,21 +4,51 @@
   sudo: yes
   tasks:
     - name: Change default umask
-      replace: dest=/etc/profile regexp='umask [0-7][0-7][0-7]$' replace='umask 0027'
+      replace: 
+        dest=/etc/profile 
+        regexp='umask [0-7][0-7][0-7]$' 
+        replace='umask 0027'
     - name: Change current umask
       command: umask 027
     - name: Check whether /var is on it's own partition
       command: grep " /var " /etc/fstab
       always_run: True
-      #ignore_errors: True
       changed_when: False
     - name: Check whether /var/log is on it's own partition
       command: grep " /var/log " /etc/fstab
       always_run: True
-      #ignore_errors: True
       changed_when: False
     - name: Check whether /var/log/audit is on it's own partition
       command: grep " /var/log/audit " /etc/fstab
       always_run: True
-      #ignore_errors: True
       changed_when: False
+    - name: Ensure Red Hat GPG Key Installed
+      rpm_key: 
+        state=present 
+        key=/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+    - name: Ensure gpgcheck Enabled In Main Yum Configuration
+      replace: 
+        dest=/etc/yum.conf 
+        regexp='gpgcheck=0' 
+        replace='gpgcheck=1'
+    - name: Ensure gpgcheck Enabled For All Yum Package Repositories
+      replace: 
+        dest=/etc/yum.repos.d/redhat.repo 
+        regexp='gpgcheck=0' 
+        replace='gpgcheck=1'
+    - name: Disable the Automounter
+      service: 
+        name=autofs 
+        state=stopped enabled=no
+    - name: Set Password Minimum Age
+      lineinfile:
+        dest=/etc/login.defs
+        regexp="PASS_MIN_DAYS *[0-9]"
+        state=present
+        line="PASS_MIN_DAYS     1"
+    - name: Set Password Maximum Age
+      lineinfile:
+        dest=/etc/login.defs
+        regexp="PASS_MAX_DAYS *[0-9]*"
+        state=present
+        line="PASS_MAX_DAYS     60"
