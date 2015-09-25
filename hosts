@@ -9,3 +9,8 @@ node2.ose3.kenscloud.io
 [nodes:vars]
 sudo_user=basicuser
 audit_rules=/etc/audit/rules.d/audit.rules
+aide_minute=05
+aide_hour=03
+aide_day_of_month=*
+aide_month=*
+aide_day_of_week=*

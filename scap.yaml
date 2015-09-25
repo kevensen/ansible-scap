@@ -39,7 +39,8 @@
     - name: Disable the Automounter
       service: 
         name=autofs 
-        state=stopped enabled=no
+        state=stopped 
+        enabled=no
     - name: Set Password Minimum Age
       lineinfile:
         dest=/etc/login.defs
@@ -66,6 +67,17 @@
       service:
         name=rsyslog
         state=running 
+        enabled=yes
+
+#Auditd
+
+    - name: Ensure audit is Installed
+      yum: 
+        name=audit
+    - name: Enable auditd service
+      service:
+        name=auditd
+        state=running
         enabled=yes
     - name: Record attempts to alter time through adjtimex 32
       lineinfile:
@@ -331,3 +343,182 @@
         regexp='-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification'
         create=yes
         line='-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification'
+    - name: Record Events that Modify the System's Mandatory Access Controls
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /etc/selinux/ -p wa -k MAC-policy'
+        create=yes
+        line='-w /etc/selinux/ -p wa -k MAC-policy'
+    - name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EACCESS 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+        create=yes
+        line='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+    - name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EPERM 32
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+        create=yes
+        line='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+    - name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EACCESS 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+        create=yes
+        line='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+    - name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EPERM 64
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+        create=yes
+        line='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+    - name: Find commands with setuid/setgid bit set on /
+      shell: sudo find / -xdev -type f -perm -4000 -o -type f -perm -2000 2>/dev/null
+      register: find_result
+    - name: Ensure auditd Collects Information on the Use of Privileged Commands
+      with_items: "{{ find_result.stdout_lines }}"
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp="-a always,exit -F path={{item}} -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged"
+        create=yes
+        line="-a always,exit -F path={{item}} -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged"
+    - name: Ensure auditd Collects Information on Exporting to Media (successful)
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k export'
+        create=yes
+        line='-a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k export'
+    - name: Ensure auditd Collects File Deletion Events by User
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete'
+        create=yes
+        line='-a always,exit -F arch=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete'
+    - name: Ensure auditd Collects System Administrator Actions
+      lineinfile: 
+        dest="{{ audit_rules  }}"
+        regexp='-w /etc/sudoers -p wa -k actions'
+        create=yes
+        line='-w /etc/sudoers -p wa -k actions'
+    - name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - insmod
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /usr/sbin/insmod -p x -k modules'
+        create=yes
+        line='-w /usr/sbin/insmod -p x -k modules'
+    - name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - rmmod
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /usr/sbin/rmmod -p x -k modules'
+        create=yes
+        line='-w /usr/sbin/rmmod -p x -k modules'
+    - name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - modprobe
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-w /usr/sbin/modprobe -p x -k modules'
+        create=yes
+        line='-w /usr/sbin/modprobe -p x -k modules'
+    - name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - init_module/delete_module
+      lineinfile:
+        dest="{{ audit_rules }}"
+        regexp='-a always,exit -F arch=b64 -S init_module -S delete_module -k modules'
+        create=yes
+        line='-a always,exit -F arch=b64 -S init_module -S delete_module -k modules'
+    - name: Disable Automatic Bug Reporting Tool (abrtd)
+      service:
+        name=abrtd
+        state=stopped 
+        enabled=no
+    - name: Install Chrony Service
+      yum:
+        name=chrony
+    - name: Enable Chrony Service (chrony)
+      service:
+        name=chronyd
+        state=running 
+        enabled=yes
+    - name: Disable Odd Job Daemon (oddjobd)
+      service:
+        name=oddjobd
+        state=stopped
+        enabled=no
+    - name: Disable Apache Qpid (qpidd)
+      service:
+        name=qpidd
+        state=stopped
+        enabled=no
+    - name: Disable Network Router Discovery Daemon (rdisc)
+      service:
+        name=rdisc
+        state=stopped
+        enabled=no
+    - name: Disable At Service (atd)
+      service:
+        name=atd
+        state=stopped
+        enabled=no
+    - name: Enable SSH Warning Banner
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='Banner /etc/issue'
+        line='Banner /etc/issue'
+
+#PRELINKING
+
+    - name: Disable PRELINKING by Default
+      lineinfile:
+        dest=/etc/sysconfig/preling
+        create=yes
+        regexp='PRELINKING=yes'
+        line='PRELINKING=yes'
+    - name: Disable existing PRELINKING
+      command: /usr/sbin/prelink -ua
+      ignore_errors: yes
+# File and group ownership
+    - name: Check ownership and permissions on /etc/shadow
+      file: path=/etc/shadow owner=root group=root mode=0000
+    - name: Check ownership and permissions on /etc/group
+      file: path=/etc/group owner=root group=root mode=0644
+    - name: Check ownership and permissions on /etc/passwd
+      file: path=/etc/passwd owner=root group=root mode=0644
+
+#SSH Stuff
+    - name: SSH Permit Root Login
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp="^PermitRootLogin "
+        line="PermitRootLogin no"
+    - name: SSH Permit Empty Passwords
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp="^PermitEmptyPasswords "
+        line="PermitEmptyPasswords no"
+    - name: SSH Permit Password Authentication
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp="^PasswordAuthentication "
+        line="PasswordAuthentication no"
+#SELinux
+    - name: Enable SELinux
+      lineinfile: dest=/etc/selinux/config regexp=^SELINUX= line=SELINUX=enforcing
+
+
+    - name: Install AIDE
+      yum:
+        name=aide
+    - name: Initialize AIDE
+      command: /sbin/aide --init creates=/var/lib/aide/aide.db.new.gz
+    - name: Copy AIDE Database
+      command: cp /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz creates=/var/lib/aide/aide.db.gz
+    - name: Schedule AIDE
+      lineinfile:
+        dest=/etc/crontab
+        regexp=' root nice -19 /sbin/aide --check'
+        line='{{ aide_minute }} {{ aide_hour }} {{ aide_day_of_month }} {{ aide_month }} {{ aide_day_of_week }} root nice -19 /sbin/aide --check'
+
+    - name: Restart SSH
+      service:
+        name=sshd
+        state=reloaded
+        enabled=yes
