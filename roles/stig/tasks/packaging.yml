@@ -1,0 +1,14 @@
+- name: Ensure Red Hat GPG Key Installed
+  rpm_key:
+    state=present
+    key=/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+- name: Ensure gpgcheck Enabled In Main Yum Configuration
+  replace:
+    dest=/etc/yum.conf
+    regexp='gpgcheck=0'
+    replace='gpgcheck=1'
+- name: Ensure gpgcheck Enabled For All Yum Package Repositories
+  replace:
+    dest=/etc/yum.repos.d/redhat.repo
+    regexp='gpgcheck=0'
+    replace='gpgcheck=1'

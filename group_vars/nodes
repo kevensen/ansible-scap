@@ -2,9 +2,11 @@
 # file: group_vars/nodes
 sudo_user: basicuser
 audit_rules: /etc/audit/rules.d/audit.rules
+audit_arch:
+  - b32
+  - b64
 aide_minute: 05
 aide_hour: 03
 aide_day_of_month: '*'
 aide_month: '*'
 aide_day_of_week: '*'
-

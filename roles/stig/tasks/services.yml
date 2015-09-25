@@ -1,0 +1,46 @@
+- name: Disable the Automounter
+  service:
+    name=autofs
+    state=stopped
+    enabled=no
+- name: Disable Automatic Bug Reporting Tool (abrtd)
+  service:
+    name=abrtd
+    state=stopped
+    enabled=no
+- name: Install Chrony Service
+  yum:
+    name=chrony
+- name: Enable Chrony Service (chrony)
+  service:
+    name=chronyd
+    state=running
+    enabled=yes
+- name: Disable Odd Job Daemon (oddjobd)
+  service:
+    name=oddjobd
+    state=stopped
+    enabled=no
+- name: Disable Apache Qpid (qpidd)
+  service:
+    name=qpidd
+    state=stopped
+    enabled=no
+- name: Disable Network Router Discovery Daemon (rdisc)
+  service:
+    name=rdisc
+    state=stopped
+    enabled=no
+- name: Disable At Service (atd)
+  service:
+    name=atd
+    state=stopped
+    enabled=no
+- name: Ensure rsyslog is Installed
+  yum:
+    name=rsyslog
+- name: Enable rsyslog Service
+  service:
+    name=rsyslog
+    state=running
+    enabled=yes

@@ -1,0 +1,13 @@
+- name: Check whether /var is on it's own partition
+  command: grep " /var " /etc/fstab
+  always_run: True
+  changed_when: False
+- name: Check whether /var/log is on it's own partition
+  command: grep " /var/log " /etc/fstab
+  always_run: True
+  changed_when: False
+- name: Check whether /var/log/audit is on it's own partition
+  command: grep " /var/log/audit " /etc/fstab
+  always_run: True
+  changed_when: False
+

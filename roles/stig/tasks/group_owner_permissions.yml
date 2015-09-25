@@ -1,0 +1,6 @@
+- name: Check ownership and permissions on /etc/shadow
+  file: path=/etc/shadow owner=root group=root mode=0000
+- name: Check ownership and permissions on /etc/group
+  file: path=/etc/group owner=root group=root mode=0644
+- name: Check ownership and permissions on /etc/passwd
+  file: path=/etc/passwd owner=root group=root mode=0644
