@@ -1,0 +1,8 @@
+[master]
+master.ose3.kenscloud.io
+
+[nodes]
+master.ose3.kenscloud.io
+node1.ose3.kenscloud.io
+node2.ose3.kenscloud.io
+

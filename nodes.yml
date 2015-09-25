@@ -1,0 +1,7 @@
+---
+# file: nodes.yml
+ - hosts: nodes
+   remote_user: "{{ sudo_user }}"
+   sudo: yes
+   roles:
+       - stig

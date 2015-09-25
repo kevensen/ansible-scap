@@ -1,0 +1,577 @@
+- name: Change default umask
+  replace: 
+    dest=/etc/profile 
+    regexp='umask [0-7][0-7][0-7]$' 
+    replace='umask 0027'
+- name: Check whether /var is on it's own partition
+  command: grep " /var " /etc/fstab
+  always_run: True
+  changed_when: False
+- name: Check whether /var/log is on it's own partition
+  command: grep " /var/log " /etc/fstab
+  always_run: True
+  changed_when: False
+- name: Check whether /var/log/audit is on it's own partition
+  command: grep " /var/log/audit " /etc/fstab
+  always_run: True
+  changed_when: False
+- name: Ensure Red Hat GPG Key Installed
+  rpm_key: 
+    state=present 
+    key=/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+- name: Ensure gpgcheck Enabled In Main Yum Configuration
+  replace: 
+    dest=/etc/yum.conf 
+    regexp='gpgcheck=0' 
+    replace='gpgcheck=1'
+- name: Ensure gpgcheck Enabled For All Yum Package Repositories
+  replace: 
+    dest=/etc/yum.repos.d/redhat.repo 
+    regexp='gpgcheck=0' 
+    replace='gpgcheck=1'
+- name: Disable the Automounter
+  service: 
+    name=autofs 
+    state=stopped 
+    enabled=no
+- name: Set Password Minimum Age
+  lineinfile:
+    dest=/etc/login.defs
+    regexp="PASS_MIN_DAYS *[0-9]"
+    state=present
+    line="PASS_MIN_DAYS     1"
+- name: Set Password Maximum Age
+  lineinfile:
+    dest=/etc/login.defs
+    regexp="PASS_MAX_DAYS *[0-9]*"
+    state=present
+    line="PASS_MAX_DAYS     60"
+- name: Modify the System Login Banner
+  file:
+    src=issue
+    dest=/etc/issue
+    group=root
+    owner=root
+    mode=644 
+- name: Ensure rsyslog is Installed
+  yum:
+    name=rsyslog
+- name: Enable rsyslog Service
+  service:
+    name=rsyslog
+    state=running 
+    enabled=yes
+
+#Auditd
+
+- name: Ensure audit is Installed
+  yum: 
+    name=audit
+- name: Enable auditd service
+  service:
+    name=auditd
+    state=running
+    enabled=yes
+- name: Record attempts to alter time through adjtimex 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S adjtimex -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b32 -S adjtimex -k audit_time_rules'
+  notify: reload auditd
+- name: Record attempts to alter time through adjtimex 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S adjtimex -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b64 -S adjtimex -k audit_time_rules'
+  notify: reload auditd
+- name: Record attempts to alter time through settimeofday 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S settimeofday -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b32 -S settimeofday -k audit_time_rules'
+  notify: reload auditd
+- name: Record attempts to alter time through settimeofday 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S settimeofday -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b64 -S settimeofday -k audit_time_rules'
+  notify: reload auditd
+- name: Record Attempts to Alter Time Through stime 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S stime -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b32 -S stime -k audit_time_rules'
+  notify: reload auditd
+- name: Record Attempts to Alter Time Through clock_settime 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S clock_settime -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b32 -S clock_settime -k audit_time_rules'
+  notify: reload auditd
+- name: Record Attempts to Alter Time Through clock_settime 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S clock_settime -k audit_time_rules'
+    create=yes
+    line='-a always,exit -F arch=b64 -S clock_settime -k audit_time_rules'
+  notify: reload auditd
+- name: Record Attempts to Alter the localtime File
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/localtime -p wa -k audit_time_rules'
+    create=yes
+    line='-w /etc/localtime -p wa -k audit_time_rules'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - chmod 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - chmod 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S chmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - chown 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - chown 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S chown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchmod 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchmod 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S fchmod -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchmodat 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchmodat 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchown 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchown 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S fchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchown 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fchownat 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S fchownat -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fremovexattr 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fremovexattr 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S fremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fsetxattr 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - fsetxattr 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S fsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - lchown 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - lchown 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - lremovexattr 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - lremovexattr 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S lremovexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - lsetxattr 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - lsetxattr 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S lsetxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - removexattr 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - removexattr 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S removexattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - setxattr 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b32 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify the System's Discretionary Access Controls - setxattr 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+    create=yes
+    line='-a always,exit -F arch=b64 -S setxattr -F auid>=1000 -F auid!=4294967295 -k perm_mod'
+  notify: reload auditd
+- name: Record Events that Modify User/Group Information - /etc/group
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/group -p wa -k audit_rules_usergroup_modification'
+    create=yes
+    line='-w /etc/group -p wa -k audit_rules_usergroup_modification'
+  notify: reload auditd
+- name: Record Events that Modify User/Group Information - /etc/passwd
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/passwd -p wa -k audit_rules_usergroup_modification'
+    create=yes
+    line='-w /etc/passwd -p wa -k audit_rules_usergroup_modification'
+  notify: reload auditd
+- name: Record Events that Modify User/Group Information - /etc/gshadow
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/gshadow -p wa -k audit_rules_usergroup_modification'
+    create=yes
+    line='-w /etc/gshadow -p wa -k audit_rules_usergroup_modification'
+  notify: reload auditd
+- name: Record Events that Modify User/Group Information - /etc/shadow
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/shadow -p wa -k audit_rules_usergroup_modification'
+    create=yes
+    line='-w /etc/shadow -p wa -k audit_rules_usergroup_modification'
+  notify: reload auditd
+- name: Record Events that Modify User/Group Information - /etc/security/opasswd
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/security/opasswd -p wa -k audit_rules_usergroup_modification'
+    create=yes
+    line='-w /etc/security/opasswd -p wa -k audit_rules_usergroup_modification'
+  notify: reload auditd
+- name: Record Events that Modify the System's Network Environment - sethostname/setdomainname
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S sethostname -S setdomainname -k audit_rules_networkconfig_modification'
+    create=yes
+    line='-a always,exit -F arch=b64 -S sethostname -S setdomainname -k audit_rules_networkconfig_modification'
+  notify: reload auditd
+- name: Record Events that Modify the System's Network Environment - /etc/issue
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/issue -p wa -k audit_rules_networkconfig_modification'
+    create=yes
+    line='-w /etc/issue -p wa -k audit_rules_networkconfig_modification'
+  notify: reload auditd
+- name: Record Events that Modify the System's Network Environment - /etc/issue.net
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/issue.net -p wa -k audit_rules_networkconfig_modification'
+    create=yes
+    line='-w /etc/issue.net -p wa -k audit_rules_networkconfig_modification'
+  notify: reload auditd
+- name: Record Events that Modify the System's Network Environment - /etc/hosts
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/hosts -p wa -k audit_rules_networkconfig_modification'
+    create=yes
+    line='-w /etc/hosts -p wa -k audit_rules_networkconfig_modification'
+  notify: reload auditd
+- name: Record Events that Modify the System's Network Environment - /etc/sysconfig/network
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification'
+    create=yes
+    line='-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification'
+  notify: reload auditd
+- name: Record Events that Modify the System's Mandatory Access Controls
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /etc/selinux/ -p wa -k MAC-policy'
+    create=yes
+    line='-w /etc/selinux/ -p wa -k MAC-policy'
+  notify: reload auditd
+- name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EACCESS 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+    create=yes
+    line='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+  notify: reload auditd
+- name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EPERM 32
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+    create=yes
+    line='-a always,exit -F arch=b32 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+  notify: reload auditd
+- name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EACCESS 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+    create=yes
+    line='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access'
+  notify: reload auditd
+- name: Ensure auditd Collects Unauthorized Access Attempts to Files (unsuccessful) - EPERM 64
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+    create=yes
+    line='-a always,exit -F arch=b64 -S creat -S open -S openat -S open_by_handle_at -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access'
+  notify: reload auditd
+- name: Find commands with setuid/setgid bit set on /
+  shell: sudo find / -xdev -type f -perm -4000 -o -type f -perm -2000 2>/dev/null
+  register: find_result
+- name: Ensure auditd Collects Information on the Use of Privileged Commands
+  with_items: "{{ find_result.stdout_lines }}"
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp="-a always,exit -F path={{item}} -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged"
+    create=yes
+    line="-a always,exit -F path={{item}} -F perm=x -F auid>=1000 -F auid!=4294967295 -k privileged"
+  notify: reload auditd
+- name: Ensure auditd Collects Information on Exporting to Media (successful)
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k export'
+    create=yes
+    line='-a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k export'
+  notify: reload auditd
+- name: Ensure auditd Collects File Deletion Events by User
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete'
+    create=yes
+    line='-a always,exit -F arch=b64 -S rmdir -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete'
+  notify: reload auditd
+- name: Ensure auditd Collects System Administrator Actions
+  lineinfile: 
+    dest="{{ audit_rules  }}"
+    regexp='-w /etc/sudoers -p wa -k actions'
+    create=yes
+    line='-w /etc/sudoers -p wa -k actions'
+  notify: reload auditd
+- name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - insmod
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /usr/sbin/insmod -p x -k modules'
+    create=yes
+    line='-w /usr/sbin/insmod -p x -k modules'
+  notify: reload auditd
+- name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - rmmod
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /usr/sbin/rmmod -p x -k modules'
+    create=yes
+    line='-w /usr/sbin/rmmod -p x -k modules'
+  notify: reload auditd
+- name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - modprobe
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-w /usr/sbin/modprobe -p x -k modules'
+    create=yes
+    line='-w /usr/sbin/modprobe -p x -k modules'
+  notify: reload auditd
+- name: Ensure auditd Collects Information on Kernel Module Loading and Unloading - init_module/delete_module
+  lineinfile:
+    dest="{{ audit_rules }}"
+    regexp='-a always,exit -F arch=b64 -S init_module -S delete_module -k modules'
+    create=yes
+    line='-a always,exit -F arch=b64 -S init_module -S delete_module -k modules'
+  notify: reload auditd
+
+#Services
+- name: Disable Automatic Bug Reporting Tool (abrtd)
+  service:
+    name=abrtd
+    state=stopped 
+    enabled=no
+- name: Install Chrony Service
+  yum:
+    name=chrony
+- name: Enable Chrony Service (chrony)
+  service:
+    name=chronyd
+    state=running 
+    enabled=yes
+- name: Disable Odd Job Daemon (oddjobd)
+  service:
+    name=oddjobd
+    state=stopped
+    enabled=no
+- name: Disable Apache Qpid (qpidd)
+  service:
+    name=qpidd
+    state=stopped
+    enabled=no
+- name: Disable Network Router Discovery Daemon (rdisc)
+  service:
+    name=rdisc
+    state=stopped
+    enabled=no
+- name: Disable At Service (atd)
+  service:
+    name=atd
+    state=stopped
+    enabled=no
+- name: Enable SSH Warning Banner
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp='Banner /etc/issue'
+    line='Banner /etc/issue'
+
+#PRELINKING
+
+- name: Disable PRELINKING by Default
+  lineinfile:
+    dest=/etc/sysconfig/preling
+    create=yes
+    regexp='PRELINKING=yes'
+    line='PRELINKING=yes'
+- name: Disable existing PRELINKING
+  command: /usr/sbin/prelink -ua
+  ignore_errors: yes
+# File and group ownership
+- name: Check ownership and permissions on /etc/shadow
+  file: path=/etc/shadow owner=root group=root mode=0000
+- name: Check ownership and permissions on /etc/group
+  file: path=/etc/group owner=root group=root mode=0644
+- name: Check ownership and permissions on /etc/passwd
+  file: path=/etc/passwd owner=root group=root mode=0644
+
+#SSH Stuff
+- name: SSH Permit Root Login
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^PermitRootLogin "
+    line="PermitRootLogin no"
+  notify:
+  - reload ssh
+- name: SSH Permit Empty Passwords
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^PermitEmptyPasswords "
+    line="PermitEmptyPasswords no"
+  notify:
+    - reload ssh
+- name: SSH Permit Password Authentication
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^PasswordAuthentication "
+    line="PasswordAuthentication no"
+  notify:
+    - reload ssh
+#SELinux
+- name: Enable SELinux
+  lineinfile: dest=/etc/selinux/config regexp=^SELINUX= line=SELINUX=enforcing
+
+
+- name: Install AIDE
+  yum:
+    name=aide
+- name: Initialize AIDE
+  command: /sbin/aide --init creates=/var/lib/aide/aide.db.new.gz
+- name: Copy AIDE Database
+  command: cp /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz creates=/var/lib/aide/aide.db.gz
+- name: Schedule AIDE
+  lineinfile:
+    dest=/etc/crontab
+    regexp=' root nice -19 /sbin/aide --check'
+    line='{{ aide_minute }} {{ aide_hour }} {{ aide_day_of_month }} {{ aide_month }} {{ aide_day_of_week }} root nice -19 /sbin/aide --check'
+
