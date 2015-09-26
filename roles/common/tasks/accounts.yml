@@ -1,0 +1,42 @@
+- name: Restrict Virtual Console Root Logins
+  lineinfile:
+    dest=/etc/securetty
+    regexp='^vc'
+    state=absent
+  tags:
+    - CCE-26855-7
+    - AC-6(2)
+- name: Restrict Serial Port Root Logins
+  lineinfile:
+    dest=/etc/securetty
+    regexp='ttyS[0-9]'
+    state=absent
+  tags:
+    - CCE-27047-0
+    - AC-6(2)
+- name: List Users
+  shell: "cat /etc/passwd | cut -d: -f1"
+  register: system_users
+  changed_when: False
+- name: List UIDs
+  shell: "cat /etc/passwd | cut -d: -f3"
+  register: system_uids
+  changed_when: False
+- name: Ensure that System Accounts Do Not Run a Shell Upon Login
+  with_together: 
+    - "{{ system_users.stdout_lines }}"
+    - "{{ system_uids.stdout_lines }}"
+  user: name={{ item.0 }} shell=/sbin/nologin
+  when: (item.1 < 500) and (item.1 > 0)
+  tags:
+    - CCE-26966-2
+- name: Verify Only Root Has UID 0
+  with_together:
+    - "{{ system_users.stdout_lines }}"
+    - "{{ system_uids.stdout_lines }}"
+  user: name={{ item.0 }} state=absent
+  when: (item.1 == 0) and (item.0 != "root")
+  tags:
+    - CCE-26971-2
+    - AC-6
+    - IA-2(1)

@@ -1,7 +1,13 @@
 #- name: Enable SELinux
-#  lineinfile: dest=/etc/selinux/config regexp=^SELINUX= line=SELINUX=enforcing
 - selinux: policy=targeted state=enforcing
-  register: selinuxpolicy
+  tags:
+    - CCE-26969-6
+    - CCE-26875-5
+    - AC-3
+    - AC-3(3)
+    - AC-4
+    - AC-6
+    - AU-9
 - name: Set SELinux to Enforcing
   command: /usr/sbin/setenforce 1
   when: ansible_selinux.mode == "permissive"

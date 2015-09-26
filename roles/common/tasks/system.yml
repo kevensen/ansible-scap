@@ -1,0 +1,16 @@
+- name: Modify the System Login Banner
+  file:
+    src=issue
+    dest=/etc/issue
+    group=root
+    owner=root
+    mode=644
+  tags:
+    - CCE-26974-6
+    - AC-8(a)
+    - AC-8(b)
+    - AC-8(c)
+- name: Install the screen Package
+  yum: name=screen
+  tags:
+    - CCE-26940-7
