@@ -4,4 +4,4 @@
    remote_user: "{{ sudo_user }}"
    sudo: yes
    roles:
-       - rhel
+       - common

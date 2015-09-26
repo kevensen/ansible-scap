@@ -1,0 +1,7 @@
+#- name: Enable SELinux
+#  lineinfile: dest=/etc/selinux/config regexp=^SELINUX= line=SELINUX=enforcing
+- selinux: policy=targeted state=enforcing
+  register: selinuxpolicy
+- name: Set SELinux to Enforcing
+  command: /usr/sbin/setenforce 1
+  when: ansible_selinux.mode == "permissive"
