@@ -26,3 +26,15 @@
     line="PasswordAuthentication no"
   notify:
     - reload ssh
+- name: Allow Only SSH Protocol 2
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^Protocol [0-9]"
+    line="Protocol 2"
+  notify:
+    - reload ssh
+  tags:
+    - CCE-27072-8
+    - AC-17(7)
+    - IA-5(1)(c)
+

@@ -55,12 +55,12 @@
 - name: Find System Executables Are Group or World Writeable
   shell: "find /bin /usr/bin /usr/local/bin /sbin /usr/sbin /usr/local/sbin -perm -go=w"
   register: executable_files
-  changed_when: false
-  always_run: true
+  changed_when: False
+  always_run: True
 - name: Verify that System Executables Have Restrictive Permissions
   with_items: "{{ executable_files.stdout_lines }}"
   file: path={{ item }} mode="go-w" follow=true
-  ignore_errors: true
+  ignore_errors: True
   tags:
     - CCE-27289-8
     - AC-6
@@ -73,7 +73,7 @@
 - name: Verify that System Executables Have Root Ownership
   with_lines: "{{ executable_files.stdout_lines }}"
   file: path={{ item }} owner=root follow=true
-  ignore_errors: true
+  ignore_errors: True
   tags:
     - CCE-27623-8
     - AC-6
