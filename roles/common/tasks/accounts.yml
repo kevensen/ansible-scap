@@ -40,3 +40,36 @@
     - CCE-26971-2
     - AC-6
     - IA-2(1)
+
+- name: Find User's With Passwords That Aren't Shadowed
+  shell: 'grep -E -v :x:  /etc/passwd | cut -d: -f1'
+  register: bad_users
+  always_run: True
+- name: Find Passwords That Aren't Shadowed
+  shell: 'grep -E -v :x:  /etc/passwd | cut -d: -f2'
+  register: bad_passwords
+  always_run: True
+
+- name: Verify All Account Password Hashes are Shadowed - /etc/passwd
+  with_together: 
+    - "{{ bad_users.stdout_lines }}"
+    - "{{ bad_passwords.stdout_lines }}"
+  replace:
+    dest=/etc/passwd
+    regexp='^{{ item.0 }}:{{ item.1 }}:'
+    replace='{{ item.0 }}:x:'
+  tags:
+    - CCE-26476-2
+    - IA-5(h)
+- name: Verify All Account Password Hashes are Shadowed - /etc/shadow
+  with_together:
+    - "{{ bad_users.stdout_lines }}"
+    - "{{ bad_passwords.stdout_lines }}"
+  user:
+    name={{ item.0 }}
+    password={{ item.1 }}
+  tags:
+    - CCE-26476-2
+    - IA-5(h)
+
+
