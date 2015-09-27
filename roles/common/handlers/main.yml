@@ -6,3 +6,5 @@
   service:
     name=auditd
     state=reloaded
+- name: apply grub2 changes
+  shell: grub2-mkconfig -o /boot/grub2/grub.cfg

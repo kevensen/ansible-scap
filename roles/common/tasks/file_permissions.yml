@@ -66,7 +66,7 @@
     - AC-6
 
 - name: Find System Executables That Are Not Owned By Root
-  shell: "find /bin /usr/bin /usr/local/bin /sbin /usr/sbin /usr/local/sbin \\! -user root -print"
+  shell: 'find /bin /usr/bin /usr/local/bin /sbin /usr/sbin /usr/local/sbin \! -user root -print'
   register: executable_files
   changed_when: False
   always_run: True
@@ -79,7 +79,7 @@
     - AC-6
 
 - name: System Audit Logs Must Have Mode 0640 or Less Permissive
-  file: path=/var/log/audit/audit.log mode=0640
+  file: path=/var/log/audit/audit.log mode=640
   tags:
     - CCE-27243-5
     - AC-6

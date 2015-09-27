@@ -20,11 +20,25 @@
 - name: Install Chrony Service
   yum:
     name=chrony
+  when: ansible_distribution_major_version == 7
 - name: Enable Chrony Service (chrony)
   service:
     name=chronyd
     state=running
     enabled=yes
+  when: ansible_distribution_major_version == 7
+
+- name: Install NTP Service
+  yum:
+    name=ntp
+  when: ansible_distribution_major_version == 6
+- name: Enable NTP Service (ntpd)
+  service:
+    name=ntpd
+    state=running
+    enabled=yes
+  when: ansible_distribution_major_version == 6
+
 - name: Disable Odd Job Daemon (oddjobd)
   service:
     name=oddjobd
