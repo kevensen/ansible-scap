@@ -45,9 +45,11 @@
   shell: 'grep -E -v :x:  /etc/passwd | cut -d: -f1'
   register: bad_users
   always_run: True
+  changed_when: False
 - name: Find Passwords That Aren't Shadowed
   shell: 'grep -E -v :x:  /etc/passwd | cut -d: -f2'
   register: bad_passwords
+  changed_when: False
   always_run: True
 
 - name: Verify All Account Password Hashes are Shadowed - /etc/passwd
