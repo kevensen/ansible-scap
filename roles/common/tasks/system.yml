@@ -1,10 +1,37 @@
-- name: Modify the System Login Banner
-  file:
+- name: Modify the System Login Banner - /etc/issue
+  copy:
     src=issue
     dest=/etc/issue
     group=root
     owner=root
     mode=644
+    force=yes
+  tags:
+    - CCE-26974-6
+    - AC-8(a)
+    - AC-8(b)
+    - AC-8(c)
+- name: Modify the System Login Banner - /etc/issue.net
+  copy:
+    src=issue
+    dest=/etc/issue.net
+    group=root
+    owner=root
+    mode=644
+    force=yes
+  tags:
+    - CCE-26974-6
+    - AC-8(a)
+    - AC-8(b)
+    - AC-8(c)
+- name: Modify the System Login Banner - /etc/motd
+  copy:
+    src=issue
+    dest=/etc/motd
+    group=root
+    owner=root
+    mode=644
+    force=yes
   tags:
     - CCE-26974-6
     - AC-8(a)

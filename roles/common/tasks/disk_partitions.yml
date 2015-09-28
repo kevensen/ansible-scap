@@ -11,6 +11,7 @@
   tags:
     - CCE-26215-4
     - AU-9
+  ignore_errors: yes
 - name: Check whether /var/log/audit is on it's own partition
   command: grep " /var/log/audit " /etc/fstab
   always_run: True
@@ -19,4 +20,5 @@
     - CCE-26436-6
     - AU-4
     - AU-9
+  ignore_errors: yes
 
