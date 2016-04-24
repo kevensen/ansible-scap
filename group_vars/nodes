@@ -1,6 +1,5 @@
 ---
 # file: group_vars/nodes
-sudo_user: basicuser
 audit_rules: /etc/audit/rules.d/audit.rules
 audit_arch:
   - b32

@@ -4,6 +4,9 @@
   changed_when: False
   tags:
     - CCE-26639-5
+  register: result
+  ignore_errors: true
+
 - name: Check whether /var/log is on it's own partition
   command: grep " /var/log " /etc/fstab
   always_run: True
